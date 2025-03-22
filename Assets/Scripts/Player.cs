@@ -1,13 +1,19 @@
 using System;
 using UnityEngine;
 
-public class Player : MonoBehaviour
+public class Player : MonoBehaviour, IObserver
 {
     [SerializeField] Transform groundCheckPivot;
     [SerializeField] LayerMask groundMask;
     [SerializeField] float groundCheckDistance;
     [SerializeField] float jumpForce;
     [SerializeField] float movementSpeed;
+    [SerializeField] float delayTime = 1;
+
+# if UNITY_EDITOR
+    public float LandingDealyTime => delayTime;
+#endif
+
     public Animator Animator;
     Rigidbody _rigidBody;
     public GenericStateMachine<ECharacterState> StateMachine;
@@ -16,6 +22,7 @@ public class Player : MonoBehaviour
     public bool IsGrounded { get; private set; }
     public Vector2 MoveDirection { get; private set; }
     public bool AttackRequested { get; private set; }
+    private bool _canMove = true;
     private void Awake()
     {
         Animator = GetComponent<Animator>();
@@ -27,10 +34,19 @@ public class Player : MonoBehaviour
         StateMachine.RegisterState(ECharacterState.Walking, new WalkingCharacterState(this));
         StateMachine.RegisterState(ECharacterState.Jumping, new JumpingCharacterState(this));
         StateMachine.RegisterState(ECharacterState.Falling, new FallingCharacterState(this));
-        StateMachine.RegisterState(ECharacterState.Landing, new LandingCharacterState(this));
+        StateMachine.RegisterState(ECharacterState.Landing, new LandingCharacterState(this, delayTime));
         StateMachine.RegisterState(ECharacterState.Attacking, new AttackCharacterState(this));
 
         SetState(ECharacterState.Idle);
+    }
+
+    private void OnEnable()
+    {
+        GameManager.Instance.Attach(this);
+    }
+    private void OnDisable()
+    {
+        GameManager.Instance.Detach(this);
     }
 
     public void GroundCheck()
@@ -45,6 +61,9 @@ public class Player : MonoBehaviour
 
     void Update()
     {
+        if (!_canMove)
+            return;
+
         GroundCheck();
 
         StateMachine.OnUpdate();
@@ -52,6 +71,9 @@ public class Player : MonoBehaviour
 
     private void FixedUpdate()
     {
+        if (!_canMove)
+            return;
+
         StateMachine.OnFixedUpdate();
     }
 
@@ -93,5 +115,14 @@ public class Player : MonoBehaviour
     public void AttackResponse()
     {
         AttackRequested = false; 
+    }
+
+    public void ObserverUpdate(ISubject subject)
+    {
+        var gameManager = subject as GameManager;
+        if (gameManager != null)
+        {
+            _canMove = !gameManager.IsPaused;
+        }
     }
 }

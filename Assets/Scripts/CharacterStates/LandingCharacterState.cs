@@ -2,11 +2,12 @@ using UnityEngine;
 
 public class LandingCharacterState : State
 {
-    private float _delay = 1f;
+    float _delayTime;
     private float _timePassed = 0;
-    public LandingCharacterState(Player player)
+    public LandingCharacterState(Player player, float delayTime)
     {
         _owner = player;
+        _delayTime = delayTime;
     }
 
     public Player _owner { get; }
@@ -54,8 +55,14 @@ public class LandingCharacterState : State
         }
 
         _timePassed += Time.deltaTime;
-        if (_timePassed < _delay)
+
+#if UNITY_EDITOR
+        if (_timePassed < _owner.LandingDealyTime)
             return;
+#else
+        if (_timePassed < _delayTime)
+            return;
+#endif
 
         _owner.SetState(ECharacterState.Idle);
     }

@@ -1,13 +1,19 @@
 using DesignPatterns.Generics;
+using System;
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
-public class GameManager : Singleton<GameManager>
+public class GameManager : Singleton<GameManager>, ISubject
 {
     [SerializeField] Player player;
     public Transform FoodSpawnPoint;
     public IFactory FoodFactory { get; private set; }
 
     InputSystem_Actions _input;
+
+    private List<IObserver> _attachedObservers = new List<IObserver>();
+    public bool IsPaused { get; private set; }
 
     public override void Awake()
     {
@@ -29,7 +35,17 @@ public class GameManager : Singleton<GameManager>
 
         _input.Player.Attack.performed += Attack_performed;
 
+        _input.General.PauseGame.performed += PauseGame_performed;
+
         _input.Enable();
+    }
+
+    private void PauseGame_performed(InputAction.CallbackContext context)
+    {
+        IsPaused = !IsPaused;
+        Notify();
+        Publisher.Publish(new PauseMessage(IsPaused));
+        Time.timeScale = IsPaused ? 0 : 1;
     }
 
     private void Attack_performed(UnityEngine.InputSystem.InputAction.CallbackContext obj)
@@ -50,6 +66,21 @@ public class GameManager : Singleton<GameManager>
     private void Move_performed(UnityEngine.InputSystem.InputAction.CallbackContext obj)
     {
         player.MoveDirectionRequest(obj.ReadValue<Vector2>());
+    }
+
+    public void Attach(IObserver observer)
+    {
+        _attachedObservers.Add(observer);
+    }
+
+    public void Detach(IObserver observer)
+    {
+        _attachedObservers.Remove(observer);
+    }
+
+    public void Notify()
+    {
+        _attachedObservers.ForEach(observer => observer.ObserverUpdate(this));
     }
 }
  
