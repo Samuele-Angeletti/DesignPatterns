@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-public class Player : MonoBehaviour, IObserver
+public class Player : MonoBehaviour, IObserver, ISubscriber
 {
     [SerializeField] Transform groundCheckPivot;
     [SerializeField] LayerMask groundMask;
@@ -25,6 +25,7 @@ public class Player : MonoBehaviour, IObserver
     private bool _canMove = true;
     private void Awake()
     {
+        Publisher.Subscribe(this, typeof(PauseMessage));
         Animator = GetComponent<Animator>();
         _rigidBody = GetComponent<Rigidbody>();
 
@@ -124,5 +125,13 @@ public class Player : MonoBehaviour, IObserver
         {
             _canMove = !gameManager.IsPaused;
         }
+    }
+
+    public void OnPublish(IPublisherMessage message)
+    {
+    }
+
+    public void OnDisableSubscriber()
+    {
     }
 }

@@ -10,6 +10,7 @@ public class TurretNugget : MonoBehaviour, ISubscriber
     [SerializeField] Transform shootPivot;
     [SerializeField] float shootPower;
     [SerializeField] int maxBullets = 10;
+    [SerializeField] AudioClip shootSound;
 
     int _currentBullets;
     private void Awake()
@@ -41,6 +42,7 @@ public class TurretNugget : MonoBehaviour, ISubscriber
             return;
 
         Nugget spawnedNugget = nuggetPooler.Get();
+        Publisher.Publish(new PlaySoundMessage(shootSound));
 
         if (!spawnedNugget.gameObject.activeSelf)
         {
