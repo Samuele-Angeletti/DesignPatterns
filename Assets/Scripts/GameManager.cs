@@ -3,10 +3,11 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
-
+ 
 public class GameManager : Singleton<GameManager>, ISubject
 {
-    [SerializeField] Player player;
+    //[SerializeField] Player player;
+    [SerializeField] CharacterCommandControlled character;
     public Transform FoodSpawnPoint;
     public IFactory FoodFactory { get; private set; }
 
@@ -28,6 +29,7 @@ public class GameManager : Singleton<GameManager>, ISubject
 
         _input = new InputSystem_Actions();
 
+        _input.Player.Move.started += Move_started;
         _input.Player.Move.performed += Move_performed;
         _input.Player.Move.canceled += Move_canceled;
 
@@ -37,7 +39,26 @@ public class GameManager : Singleton<GameManager>, ISubject
 
         _input.General.PauseGame.performed += PauseGame_performed;
 
+        _input.Player.Next.started += Next_started;
+        _input.Player.Previous.started += Previous_started;
+
         _input.Enable();
+    }
+
+    private void Previous_started(InputAction.CallbackContext context)
+    {
+        character.Undo();
+    }
+
+    private void Next_started(InputAction.CallbackContext obj)
+    {
+        character.Redo();
+    }
+
+    private void Move_started(InputAction.CallbackContext context)
+    {
+        Vector2 direction = context.ReadValue<Vector2>();
+        character.Move(new Vector3(direction.x, 0, direction.y));
     }
 
     private void PauseGame_performed(InputAction.CallbackContext context)
@@ -50,22 +71,22 @@ public class GameManager : Singleton<GameManager>, ISubject
 
     private void Attack_performed(UnityEngine.InputSystem.InputAction.CallbackContext obj)
     {
-        player.AttackRequest();
+        //player.AttackRequest();
     }
 
     private void Jump_performed(UnityEngine.InputSystem.InputAction.CallbackContext obj)
     {
-        player.JumpRequest();
+        //player.JumpRequest();
     }
 
     private void Move_canceled(UnityEngine.InputSystem.InputAction.CallbackContext obj)
     {
-        player.MoveDirectionRequest(Vector2.zero);
+        //player.MoveDirectionRequest(Vector2.zero);
     }
 
     private void Move_performed(UnityEngine.InputSystem.InputAction.CallbackContext obj)
     {
-        player.MoveDirectionRequest(obj.ReadValue<Vector2>());
+        //player.MoveDirectionRequest(obj.ReadValue<Vector2>());
     }
 
     public void Attach(IObserver observer)

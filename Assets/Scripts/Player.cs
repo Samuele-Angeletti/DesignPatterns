@@ -4,7 +4,7 @@ using UnityEngine;
 public class Player : MonoBehaviour, IObserver, ISubscriber
 {
     [SerializeField] Transform groundCheckPivot;
-    [SerializeField] LayerMask groundMask;
+    [SerializeField] LayerMask groundMask; 
     [SerializeField] float groundCheckDistance;
     [SerializeField] float jumpForce;
     [SerializeField] float movementSpeed;
